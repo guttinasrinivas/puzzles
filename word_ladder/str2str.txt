@@ -1,0 +1,1 @@
+./Debug/main.c.o ./Debug/queue_impl.c.o ./Debug/word_list.c.o
