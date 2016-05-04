@@ -1,0 +1,9 @@
+Assumptions:
+------------
+
+Limitations:
+------------
+* This implementation is case insensitive.
+
+TODO:
+-----

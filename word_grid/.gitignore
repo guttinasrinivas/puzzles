@@ -1,0 +1,5 @@
+Debug
+cscope.out
+*.project
+.ycm_extra_conf.pyc
+TODO
