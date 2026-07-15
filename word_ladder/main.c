@@ -30,10 +30,10 @@ int main(int argc, char **argv)
     char *dict_name = NULL;
     int len = 0;
     word_list_t wl;
-    
+
     /* Simple args check. 
      * TODO Better checks. */
-	if (argc != 4)
+    if (argc != 4)
     {
         usage(argv[0]);
         return(EINVAL);
@@ -44,15 +44,15 @@ int main(int argc, char **argv)
         end = argv[2];
         dict_name = argv[3];
     }
-    
+
     wl.fname = dict_name;
     ret = wl_read_list(&wl);
     RET_MSG_ON_ERR(ret, "Dictionary file access error.\n");
-    
+
     LOG_PRINTF(INFO, "Starting from \"%s\" to \"%s\" through \"%s\"...\n", start, end, argv[3]);
     ret = word_traverse(start, end, &wl, &len);
-    
-	return(ret);
+
+    return(ret);
 }
 
 int word_traverse(char *start, char *end, const word_list_t *wl, int *len)
@@ -63,22 +63,22 @@ int word_traverse(char *start, char *end, const word_list_t *wl, int *len)
     char ch = 'a';
     char *t_w = NULL;
     char *curr_w = NULL;
-    
+
     q_t word_q;
     q_node_t *n;
     q_node_t *tmp_n;
-    
+
     ret = sanity_checks(start, end, wl);
     RET_ON_ERR(ret);
-    
+
     /* Start with queue */
     ret = q_init(&word_q);
     RET_ON_ERR(ret);
-    
+
     curr_w = strndup(start, strlen(start));
     ret = q_init_node(&n, (void*) curr_w);
     RET_ON_ERR(ret);
-    
+
     t_w = strndup(start, strlen(start));
     while (strncasecmp(curr_w, end, strlen(curr_w)) != 0)
     {
@@ -87,7 +87,7 @@ int word_traverse(char *start, char *end, const word_list_t *wl, int *len)
          * all possible valid words from the dictionary. For all
          * possible words from the list, perform an exhaustive
          * BFS until the required word is found.
-        */
+         */
         for (ii = 0; ii < strlen(start); ii++)
         {
             strncpy(t_w, curr_w, strlen(start));
@@ -104,55 +104,59 @@ int word_traverse(char *start, char *end, const word_list_t *wl, int *len)
                 RET_ON_ERR(ret);
             }
         }
-        
+
         ret = q_free_node(&n);
         RET_ON_ERR(ret);
-        
+
         ret = q_fifo_out(&word_q, &n);
         RET_ON_ERR(ret);
-        
+
         curr_w = (char*) n->data;
     }
-    
+
     return(ret);
 }
+
 
 int sanity_checks(char *start, char *end, const word_list_t *wl)
 {
     int ii = 0;
     int pos = 0;
     int ret = SUCCESS;
-    
+
     /* Preliminary checks */
     if ((start == NULL) ||
-        (end == NULL))
+            (end == NULL))
     {
         EPRINTF("Invalid inputs to word_traverse\n");
         return(EINVAL);
     }
-    
+
     if (strlen(start) != strlen(end))
     {
         LOG_PRINTF(ERROR, "This implemenation only supports words of same size.\n");
         return(EINVAL);
     }
-    
+
     for (ii = 0; ii < strlen(start); ii++)
     {
         start[ii] = tolower(start[ii]);
     }
-    
+
     for (ii = 0; ii < strlen(end); ii++)
     {
         end[ii] = tolower(end[ii]);
     }
-    
+
     if ((wl_lookup(wl, start, &pos) != 0) ||
-        (wl_lookup(wl, end, &pos) != 0))
+            (wl_lookup(wl, end, &pos) != 0))
     {
         LOG_PRINTF(ERROR, "Given word(s) are not in the dictionary.\n");
         return(ENOTSUP);
     }
-    
+
     return(ret);
 }
+
+
+/* End of file */
