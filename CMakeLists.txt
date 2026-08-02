@@ -16,6 +16,7 @@ foreach (PROJ_NAME IN ITEMS word_ladder)
     message(STATUS "Setting options for ${PROJ_NAME}")
     target_include_directories(${PROJ_NAME} PRIVATE $ENV{VAS_LIB_HOME}/inc)
     target_link_directories(${PROJ_NAME} PUBLIC $ENV{VAS_LIB_HOME}/build)
+    target_link_options(${PROJ_NAME} PRIVATE -static)
 endforeach()
 
 target_include_directories(word_ladder PRIVATE word_ladder)
