@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 
 #include "generics.h"
+#include "simple_logger.h"
 #include "queue_impl.h"
 #include "word_list.h"
 
@@ -18,21 +19,22 @@
 #define CleanUp __attribute__((cleanup (mem_free)))
 
 int LOG_CurrLevel = DEBUG;
-static char *ENV_EnQueuePrint = NULL;
+static char* ENV_EnQueuePrint = NULL;
 
 /* Algorithm specific symbols. */
-static int sanity_checks(char *start, char *end, word_list_t *wl, uint8_t *valid_bm);
-static int word_traverse(char *start, char *end, word_list_t *wl, int *len);
+static int sanity_checks(char* start, char* end, word_list_t* wl,
+                         uint8_t* valid_bm);
+static int word_traverse(char* start, char* end, word_list_t* wl, int* len);
 static void debug_print_q(q_t *word_q);
 
 
-static void mem_free(uint8_t **buf)
+static void mem_free(uint8_t** buf)
 {
     free(*buf);
 }
 
 
-static void ref_ct_dwn(RefCtdObj_t **bufp)
+static void ref_ct_dwn(RefCtdObj_t** bufp)
 {
     AssertMarker(*bufp);
 
@@ -40,53 +42,51 @@ static void ref_ct_dwn(RefCtdObj_t **bufp)
 
     /* This is a bit tricky.
      * The Ref Count maybe zero for a free'd block. */
-    if ((*bufp)->ref.ct <= 0)
-    {
-        LOG_Printf(ERROR, "Reference count for *0x%lx is less than 0", (uint64_t) *bufp);
+    if ((*bufp)->ref.ct <= 0) {
+        LOG_Printf(ERROR, "Reference count for *0x%lx is less than 0",
+                   (uint64_t) *bufp);
         exit(100);
     }
     (*bufp)->ref.ct --;
 
-    if ((*bufp)->ref.ct == 0)
-    {
+    if ((*bufp)->ref.ct == 0) {
         LOG_Printf(DEBUG, "Freeing word_list_t *0x%lx", (uint64_t) *bufp);
-        memset((void *) (*bufp), 0, sizeof(word_list_t));
-        free((void *) (*bufp));
+        memset((void*)(*bufp), 0, sizeof(word_list_t));
+        free((void*)(*bufp));
     }
 
     return;
 }
 
 
-static void usage(char *pname)
+static void usage(char* pname)
 {
     printf("%s <start word> <end word> <dictionary file>", pname);
     return;
 }
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     int ret = 0;
-    char *start = NULL;
-    char *end = NULL;
-    char *dict_name = NULL;
+    char* start = NULL;
+    char* end = NULL;
+    char* dict_name = NULL;
     int len = 0;
 
     ENV_EnQueuePrint = getenv("WORD_LADDER_PRINT_QUEUE");
 
     /* This should be an allocator, maybe a macro? */
-    word_list_t *wl = malloc(sizeof(word_list_t));
-    memset((void *) wl, 0, sizeof(word_list_t));
+    word_list_t* wl = malloc(sizeof(word_list_t));
+    memset((void*) wl, 0, sizeof(word_list_t));
     wl->ref.marker = 0xa5a5a5a5;
     SharedPtr(word_list_t, wl);
 
-    /* Simple args check. 
+    /* Simple args check.
      * TODO Better checks. */
-    if (argc != 4)
-    {
+    if (argc != 4) {
         usage(argv[0]);
-        return(EINVAL);
+        return (EINVAL);
     }
 
     start = argv[1];
@@ -100,7 +100,8 @@ int main(int argc, char **argv)
     ret = wl_read_list(wl);
     RetOnErrorWithLog(ret, "Dictionary file access error.");
 
-    LOG_Printf(INFO, "Starting from \"%s\" to \"%s\" through \"%s\"...", start, end, argv[3]);
+    LOG_Printf(INFO, "Starting from \"%s\" to \"%s\" through \"%s\"...", start, end,
+               argv[3]);
     ret = word_traverse(start, end, wl, &len);
     RetOnErrorWithLog(ret, "Look up failed");
 
@@ -108,19 +109,19 @@ int main(int argc, char **argv)
 }
 
 
-int word_traverse(char *start, char *end, word_list_t *wl, int *len)
+int word_traverse(char* start, char* end, word_list_t* wl, int* len)
 {
     int ret = 0;
     int pos = 0;
     int ii = 0;
     int iter = 0;
     char ch = 'a';
-    char *t_w = NULL;
-    char *curr_w = NULL;
+    char* t_w = NULL;
+    char* curr_w = NULL;
     q_t *word_q = NULL;
-    q_node_t *tmp_n = NULL;
-    q_node_t *curr_n = NULL;
-    CleanUp uint8_t *valid_bm = NULL;
+    q_node_t* tmp_n = NULL;
+    q_node_t* curr_n = NULL;
+    CleanUp uint8_t* valid_bm = NULL;
     SharedPtr(word_list_t, wl);
 
     word_q = malloc(sizeof(q_t));
@@ -141,34 +142,28 @@ int word_traverse(char *start, char *end, word_list_t *wl, int *len)
     ReturnOnError(ret);
 
     t_w = strndup(start, strlen(start));
-    while (strncasecmp(curr_w, end, strlen(curr_w)) != 0)
-    {
+    while (strncasecmp(curr_w, end, strlen(curr_w)) != 0) {
         /* Algorithm:
          * ----------
          * For all possible letter combinations, find all possible
          * valid words from the dictionary. For all possible words
          * from the list, perform an exhaustive BFS until the
          * required word is found. */
-        for (ii = 0; ii < strlen(start); ii++)
-        {
+        for (ii = 0; ii < strlen(start); ii++) {
             strncpy(t_w, curr_w, strlen(start));
-            for (ch = 'a'; ch <= 'z'; ch++)
-            {
+            for (ch = 'a'; ch <= 'z'; ch++) {
                 t_w[ii] = ch;
-                
-                if (wl_lookup(wl, t_w, &pos, valid_bm) != SUCCESS)
-                {
+
+                if (wl_lookup(wl, t_w, &pos, valid_bm) != SUCCESS) {
                     continue;
                 }
 
-                if (strncasecmp(t_w, end, strlen(t_w)) == 0)
-                {
+                if (strncasecmp(t_w, end, strlen(t_w)) == 0) {
                     tmp_n = curr_n;
                     iter += 1;
                     printf("%s", end);
-                    while(tmp_n->parent != NULL)
-                    {
-                        printf(" <- %s", (char *) tmp_n->data);
+                    while (tmp_n->parent != NULL) {
+                        printf(" <- %s", (char*) tmp_n->data);
                         tmp_n = tmp_n->parent;
                         iter += 1;
                     }
@@ -199,11 +194,11 @@ int word_traverse(char *start, char *end, word_list_t *wl, int *len)
         LOG_Printf(INFO, "Checking word combo for: %s ->...-> %s", curr_w, end);
     }
 
-    return(ret);
+    return (ret);
 }
 
 
-int sanity_checks(char *start, char *end, word_list_t *wl, uint8_t *valid_bm)
+int sanity_checks(char* start, char* end, word_list_t* wl, uint8_t* valid_bm)
 {
     int ii = 0;
     int pos = 0;
@@ -212,67 +207,58 @@ int sanity_checks(char *start, char *end, word_list_t *wl, uint8_t *valid_bm)
 
     /* Preliminary checks */
     if ((start == NULL) ||
-            (end == NULL))
-    {
+            (end == NULL)) {
         E_Printf("Invalid inputs to word_traverse\n");
-        return(EINVAL);
+        return (EINVAL);
     }
 
-    if (strlen(start) != strlen(end))
-    {
+    if (strlen(start) != strlen(end)) {
         LOG_Printf(ERROR, "This implemenation only supports words of same size.");
-        return(EINVAL);
+        return (EINVAL);
     }
 
-    for (ii = 0; ii < strlen(start); ii++)
-    {
+    for (ii = 0; ii < strlen(start); ii++) {
         start[ii] = tolower(start[ii]);
     }
 
-    for (ii = 0; ii < strlen(end); ii++)
-    {
+    for (ii = 0; ii < strlen(end); ii++) {
         end[ii] = tolower(end[ii]);
     }
 
-    if (wl_lookup(wl, end, &pos, valid_bm) != 0)
-    {
+    if (wl_lookup(wl, end, &pos, valid_bm) != 0) {
         LOG_Printf(ERROR, "Given word(s) are not in the dictionary.");
-        return(ENOTSUP);
+        return (ENOTSUP);
     }
 
-    return(ret);
+    return (ret);
 }
 
 
 static void debug_print_q(q_t *q)
 {
     int ii = 0;
-    q_node_t *node = NULL;
+    q_node_t* node = NULL;
 
-    if (ENV_EnQueuePrint == NULL)
-    {
+    if (ENV_EnQueuePrint == NULL) {
         return;
     }
 
     printf("Queue of %d nodes at 0x%08lx: ", q->len, ((long) q));
-    
-    if (q == NULL)
-    {
+
+    if (q == NULL) {
         LOG_Printf(WARNING, "Invalid queue");
         return;
     }
-    
+
     node = q->head;
-    for (ii = 0; ii < q->len; ii++)
-    {
+    for (ii = 0; ii < q->len; ii++) {
         printf(" -> %s", (char*) node->data);
-        if (node->next == NULL)
-        {
+        if (node->next == NULL) {
             break;
         }
         node = node->next;
     }
-    
+
     printf("\n");
     return;
 }

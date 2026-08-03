@@ -4,12 +4,11 @@
 /* Constants */
 
 /* Error codes */
-enum
-{
-    SUCCESS =               (0),
-    E_ARGS =                (1),
-    E_NOTSUP =              (2),
-    E_NOTFOUND =            (3)
+enum {
+    SUCCESS = (0),
+    E_ARGS = (1),
+    E_NOTSUP = (2),
+    E_NOTFOUND = (3)
 };
 
 /* LOGGING STUFF */
