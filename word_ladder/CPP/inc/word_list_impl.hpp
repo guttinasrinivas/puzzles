@@ -5,10 +5,17 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include "word_list.h"
+#include "utils.h"
 
 
 struct ManagedWordList {
+    using str_p = vas_lib::utils::str_p;
+    using int_p = vas_lib::utils::int_p;
+
+    using str_vec_p = vas_lib::utils::str_vec_p;
+
     std::shared_ptr<std::string> dict_fname_;
     word_list_t* list_;
     int pos_;
@@ -60,6 +67,18 @@ struct ManagedWordList {
         return 0;
     }
 
+    str_vec_p GetWords(void)
+    {
+        str_vec_p outv = std::make_shared<std::vector<str_p>>();
+
+        for (int ii = 0; ii < list_->n_words; ii++) {
+            outv->push_back(make_shared(list_->words[ii]));
+        }
+
+        return outv;
+    }
+
+
     int MapFile(void);
 
     int CleanUp(void);
@@ -82,6 +101,11 @@ struct ManagedWordList {
     word_list_t& operator*(void)
     {
         return *list_;
+    }
+
+    str_p make_shared(const char *word)
+    {
+        return std::make_shared<std::string>(word);
     }
 };
 

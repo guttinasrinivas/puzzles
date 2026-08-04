@@ -3,17 +3,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(str2str)
 
+if(NOT DEFINED ENV{VAS_LIB_HOME})
+    message(FATAL_ERROR "Please export VAS_LIB_HOME to the correct path")
+endif()
+
 
 add_executable(word_ladder_c word_ladder/C/main.c)
 add_executable(word_grid_c word_grid/C/main.c word_grid/C/src/word_grid.c word_grid/C/src/word_list.c)
 
 add_executable(word_ladder_cpp 
-    word_ladder/CPP/src/main.cpp)
+    word_ladder/CPP/src/main.cpp
+    $ENV{VAS_LIB_HOME}/src/utils.cpp)
 
-
-if(NOT DEFINED ENV{VAS_LIB_HOME})
-    message(FATAL_ERROR "Please export VAS_LIB_HOME to the correct path")
-endif()
 
 foreach (PROJ_NAME IN ITEMS word_ladder_c word_ladder_cpp)
     message(STATUS "Setting options for ${PROJ_NAME}")
