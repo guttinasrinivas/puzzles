@@ -1,0 +1,45 @@
+# Compiled Object files, Object test files, shared libraries
+*.main
+*.node
+*.dll
+*.so
+*.dylib
+
+# Compiled Binaries and Executables
+*.exe
+*.exe~
+*.test
+*.prof
+
+# Test artifacts and coverage reports
+*.out
+*.coverprofile
+profile.cov
+*.log
+
+# Dependency directories
+# (Only uncomment vendor/ if you explicitly do not want to commit dependencies)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Environment files (Contains sensitive credentials)
+.env
+.env.local
+
+# Common IDEs and text editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+.gdb*
+
+word_ladder
+
