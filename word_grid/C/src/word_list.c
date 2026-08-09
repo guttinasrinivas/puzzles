@@ -116,9 +116,10 @@ int wl_lookup(const word_list_t* wl, const char* word, int* pos)
 {
     int ret = SUCCESS;
     int ii = 0;
+    int maxlen = strlen(word);
 
     for (ii = 0; ii < wl->n_words; ii++) {
-        if (strcasecmp(word, wl->words[ii]) == 0) {
+        if (strncmp(word, wl->words[ii], maxlen) == 0) {
             //printf("Debug: %s == %s\n", word, wl->words[ii]);
             *pos = ii;
             return (ret);
