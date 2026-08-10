@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
-#include <malloc.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
