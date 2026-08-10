@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
-#include <malloc.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -34,31 +33,6 @@ static void mem_free(uint8_t** buf)
 }
 
 
-static void ref_ct_dwn(RefCtdObj_t** bufp)
-{
-    AssertMarker(*bufp);
-
-    LOG_Printf(DEBUG, "Ref count down: (0x%llx)", (unsigned long long) *bufp);
-
-    /* This is a bit tricky.
-     * The Ref Count maybe zero for a free'd block. */
-    if ((*bufp)->ref.ct <= 0) {
-        LOG_Printf(ERROR, "Reference count for *0x%lx is less than 0",
-                   (uint64_t) *bufp);
-        exit(100);
-    }
-    (*bufp)->ref.ct --;
-
-    if ((*bufp)->ref.ct == 0) {
-        LOG_Printf(DEBUG, "Freeing word_list_t *0x%lx", (uint64_t) *bufp);
-        memset((void*)(*bufp), 0, sizeof(word_list_t));
-        free((void*)(*bufp));
-    }
-
-    return;
-}
-
-
 static void usage(char* pname)
 {
     printf("%s <start word> <end word> <dictionary file>", pname);
@@ -77,9 +51,7 @@ int main(int argc, char** argv)
     ENV_EnQueuePrint = getenv("WORD_LADDER_PRINT_QUEUE");
 
     /* This should be an allocator, maybe a macro? */
-    word_list_t* wl = malloc(sizeof(word_list_t));
-    memset((void*) wl, 0, sizeof(word_list_t));
-    wl->ref.marker = 0xa5a5a5a5;
+    word_list_t* wl = vl_alloc(sizeof(word_list_t));
     SharedPtr(word_list_t, wl);
 
     /* Simple args check.
@@ -98,7 +70,7 @@ int main(int argc, char** argv)
     LOG_Printf(INFO, "Using dictionary file: %s", dict_name);
     wl->fname = dict_name;
     ret = wl_read_list(wl);
-    RetOnErrorWithLog(ret, "Dictionary file access error.");
+    RetOnErrorWithLog(ret, "Dictionary file access error: %d.", ret);
 
     LOG_Printf(INFO, "Starting from \"%s\" to \"%s\" through \"%s\"...", start, end,
                argv[3]);
@@ -116,6 +88,7 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
     int ii = 0;
     int iter = 0;
     char ch = 'a';
+    int explen = 0;
     char* t_w = NULL;
     char* curr_w = NULL;
     q_t *word_q = NULL;
@@ -124,10 +97,14 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
     CleanUp uint8_t* valid_bm = NULL;
     SharedPtr(word_list_t, wl);
 
-    word_q = malloc(sizeof(q_t));
-    memset(word_q, 0, sizeof(q_t));
+    explen = strlen(start);
+    word_q = vl_alloc(sizeof(q_t));
 
     valid_bm = malloc((wl->n_words / 8) + 1);
+    if (valid_bm == NULL) {
+        LOG_Printf(ERROR, "Out of memory. Run out and buy more memory now!!!");
+        exit(ENOMEM);
+    }
     memset(valid_bm, 0xff, (wl->n_words / 8) + 1);
 
     ret = sanity_checks(start, end, wl, valid_bm);
@@ -137,20 +114,20 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
     ret = q_init(word_q);
     ReturnOnError(ret);
 
-    curr_w = strndup(start, strlen(start));
+    curr_w = strndup(start, explen);
     ret = q_init_node(&curr_n, (void*) curr_w);
     ReturnOnError(ret);
 
-    t_w = strndup(start, strlen(start));
-    while (strncasecmp(curr_w, end, strlen(curr_w)) != 0) {
+    t_w = strndup(start, explen);
+    while (strncmp(curr_w, end, strlen(curr_w)) != 0) {
         /* Algorithm:
          * ----------
          * For all possible letter combinations, find all possible
          * valid words from the dictionary. For all possible words
          * from the list, perform an exhaustive BFS until the
          * required word is found. */
-        for (ii = 0; ii < strlen(start); ii++) {
-            strncpy(t_w, curr_w, strlen(start));
+        for (ii = 0; ii < explen; ii++) {
+            strncpy(t_w, curr_w, explen);
             for (ch = 'a'; ch <= 'z'; ch++) {
                 t_w[ii] = ch;
 
@@ -158,7 +135,7 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
                     continue;
                 }
 
-                if (strncasecmp(t_w, end, strlen(t_w)) == 0) {
+                if (strncmp(t_w, end, strlen(t_w)) == 0) {
                     tmp_n = curr_n;
                     iter += 1;
                     printf("%s", end);
@@ -173,7 +150,7 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
                     return SUCCESS;
                 }
 
-                ret = q_init_node(&tmp_n, (void*) strndup(t_w, strlen(start)));
+                ret = q_init_node(&tmp_n, (void*) strndup(t_w, explen));
                 ReturnOnError(ret);
 
                 tmp_n->parent = curr_n;
@@ -191,7 +168,6 @@ int word_traverse(char* start, char* end, word_list_t* wl, int* len)
         ReturnOnError(ret);
 
         curr_w = (char*) curr_n->data;
-        LOG_Printf(INFO, "Checking word combo for: %s ->...-> %s", curr_w, end);
     }
 
     return (ret);

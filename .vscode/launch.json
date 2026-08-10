@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C/C++ Debug (gdb Launch)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "enter program name, for example: ${workspaceFolder}/a.out",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "LLDB-DAP: Debug word_ladder_c",
+            "type": "lldb-dap",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/word_ladder_c",
+            "args": ["hot", "log", "${workspaceFolder}/word_ladder/words.txt"],
+        },
+         {
+            "name": "LLDB: Launch Program",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/word_ladder_c",
+            "args": ["hot", "log", "${workspaceFolder}/word_ladder/words.txt"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            /* Unable to start debugging. Launch options string provided by the
+               project system is invalid. Unable to determine path to debugger.
+               Please specify the "MIDebuggerPath" option. */
+            "MIDebuggerPath": "/usr/bin/lldb",
+        },
+        {
+            "name": "C/C++ Debug (lldb Launch)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/word_ladder_c",
+            "args": ["hot", "log", "${workspaceFolder}/word_ladder/words.txt"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "MIMode": "lldb",
+        }
+    ]
+}
