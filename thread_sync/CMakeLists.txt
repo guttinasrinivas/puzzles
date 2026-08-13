@@ -26,7 +26,9 @@ target_include_directories(threads_test PUBLIC src/inc src/tests/inc)
 
 # Link the threads library to the target
 target_link_libraries(threads_test PRIVATE simple_logger Threads::Threads)
+if(NOT APPLE)
 target_link_options(threads_test PRIVATE -static)
+endif()
 
 # Enable aggressive compiler warnings to keep the code tight and clean
 if(MSVC)

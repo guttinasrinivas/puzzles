@@ -96,15 +96,15 @@ struct ThreadSyncTest
 };
 
 
-#if defined USE_VAS_LIB
-void usage(char *av[], CLI_Args& ap)
+void usage(char *av[], ArgParser::CLI_Args& ap)
 {
+#if defined USE_VAS_LIB
     std::cout << std::endl << "Usage: " << av[0];
     std::cout << " " << *ap.exp_args();
     std::cout << std::endl << *ap.help();
     std::cout << std::endl;
-}
 #endif /* USE_VAS_LIB */
+}
 
 
 int main(int argc, char *av[])
@@ -115,21 +115,23 @@ int main(int argc, char *av[])
 
 #ifdef USE_CLI_ARGS
     CLI::App app{"LeetCode puzzle: Thread sync"};
-#elif defined USE_VAS_LIB
-    CLI_Args app(argc, av);
-#endif /* USE_CLI_ARGS */
-
     try {
-#ifdef USE_CLI_ARGS
         auto argv = app.ensure_utf8(av);
         app.add_option("--max-val", maxval, "Run up to and stop at <max-va,>");
         app.add_option("--verbose", verbose, "Debug log verbosity level");
         CLI11_PARSE(app, argc, argv);
 #elif defined USE_VAS_LIB
-        auto in_maxval = app.add_int("--max-val");
-        auto in_verbose = app.add_int("--verbose");
+    ArgParser::CLI_Args app(argc, av);
+    try {
+        auto in_maxval = app.add_int("", "--max-val");
+        auto in_verbose = app.add_int("", "--verbose");
+        auto in_help = app.add_flag("-h", "--help");
         LOG_Debug("Using CLI Args: %s", app.get_args()->c_str());
         app.parse_args();
+        if (*in_help) {
+            usage(av, app);
+            exit(0);
+        }
         maxval = ((*in_maxval) > 0) ? *in_maxval : maxval;
         verbose = ((*in_verbose) > 0) ? *in_verbose : verbose;
 #endif /* USE_CLI_ARGS */
@@ -139,10 +141,7 @@ int main(int argc, char *av[])
         ts_test.wait_for_threads();
     } catch (std::exception &exc) {
         std::cout << "Error: " << exc.what();
-#if defined USE_VAS_LIB
         usage(av, app);
-#endif /* USE_CLI_ARGS */
-        std::cout << std::endl << "!-------- CLI Args --------!\n";
     }
 
 
