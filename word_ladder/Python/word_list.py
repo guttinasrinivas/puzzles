@@ -1,7 +1,8 @@
-from logging import INFO, DEBUG
 from logging import getLogger
 from collections import deque
 from argparse import ArgumentParser
+from common.logger import add_logger_args
+from common.logger import setup_logging_cliargs
 
 
 class WordList:
@@ -55,7 +56,8 @@ class WordList:
             raise RuntimeError("Both start and end words must be of same length")
 
         if self.lookup(self.start_word):
-            print("Warning: Start word is already in the dictionary. Ignoring and continuing...")
+            log = getLogger(__name__)
+            log.warning("Start word is already in the dictionary. Ignoring and continuing...")
 
         # Relying on implicit raise
         self.dict_words.index(self.end_word)
@@ -82,6 +84,7 @@ class WordList:
 
 def parse_cli_args():
     parser = ArgumentParser(description="World ladder puzzle")
+    add_logger_args(parser)
     parser.add_argument("--dict-file", type=str, help="Path to the dictionary file, one word per line", required=True)
     parser.add_argument("startword", type=str, help="The starting word for the ladder")
     parser.add_argument("endword", type=str, help="The ending word for the ladder")
@@ -90,6 +93,7 @@ def parse_cli_args():
 
 def main():
     cliargs = parse_cli_args()
+    setup_logging_cliargs(cliargs)
     wl = WordList(cliargs.dict_file)
     print(wl.find_ladder(cliargs.startword, cliargs.endword))
 
