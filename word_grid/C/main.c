@@ -17,6 +17,26 @@
 int LOG_CurrLevel;
 
 
+static int print_grid(const char *gridbuf)
+{
+    if (strlen(gridbuf) != 16) {
+        LOG_Error("For now only 4x4 grid is supported. Cannot process given grid.");
+        return E_ARGS;
+    }
+
+    for (int ii = 0; ii < 16; ii++) {
+        if (ii%4 == 0) {
+            printf("\n");
+        }
+        printf("%c", gridbuf[ii]);
+    }
+
+    printf("\n\n");
+
+    return SUCCESS;
+}
+
+
 static void usage(char* pname)
 {
     printf("%s <word list> <grid as 16 characters>\n", pname);
@@ -39,14 +59,17 @@ int main(int argc, char** argv)
         grid = argv[2];
     }
 
+    ret = print_grid(argv[2]);
+    ReturnOnError(ret);
+
     wl.fname = dict_name;
     wl.filters = grid;
     ret = wl_read_list(&wl);
-    RetOnErrorWithLog(ret, "Dictionary file access error.\n");
+    RetOnErrorWithLog(ret, "Dictionary file access error.");
 
     LOG_Info("Starting up...\n");
     ret = wg_word_build(grid, &wl);
-    RetOnErrorWithLog(ret, "Error %d finding words in given input.\n", ret);
+    RetOnErrorWithLog(ret, "Error %d finding words in given input.", ret);
 
     LOG_Info("Done.\n");
 

@@ -45,7 +45,7 @@ int wg_word_build(char* grid, const word_list_t* wl)
     for (ii = 0; ii < wl->n_words; ii++) {
         ret = wg_check_word(wl->words[ii], &gg);
         if (ret == SUCCESS) {
-            printf("%s\n", wl->words[ii]);
+            printf("Found word: %s\n", wl->words[ii]);
         }
     }
 
@@ -66,17 +66,17 @@ int wg_check_word(char* word, graph_t* gg)
 
     int w_len = strlen(word);
 
-    LOG_Debug("Word: %s\n", word);
+    LOG_Debug("Word: %s", word);
 
     ret = wg_find_char(t_g, ch, &xx, &yy);
-    ReturnOnError(ret);
+    RetOnErrorWithLog(ret, "Word not found");
 
-    LOG_Debug("Found first char %c at xx: %d, yy: %d.\n",
+    LOG_Debug("Found first char %c at xx: %d, yy: %d.",
                ch, xx, yy);
 
     for (ii = 1; ii < w_len; ii++) {
         ret = wg_find_next_char(t_g, word[ii], &xx, &yy);
-        ReturnOnError(ret);
+        RetOnErrorWithLog(ret, "Word not found");
     }
 
     return (SUCCESS);
@@ -138,12 +138,12 @@ int wg_sanity_checks(char* grid, const word_list_t* wl)
 
     /* Preliminary checks */
     if (grid == NULL) {
-        LOG_Error("Invalid inputs to word_traverse\n");
+        LOG_Error("Invalid inputs to word_traverse");
         return (E_ARGS);
     }
 
     if (strlen(grid) != GRID_TOT_LEN) {
-        LOG_Error("Input must be %d characters to form a %dx%d grid.\n",
+        LOG_Error("Input must be %d characters to form a %dx%d grid.",
                 GRID_TOT_LEN, GRID_SIDE_LEN, GRID_SIDE_LEN);
         return (E_ARGS);
     }
