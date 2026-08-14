@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-
+#include "simple_logger.h"
 #include "generics.h"
 #include "word_list.h"
 #include "word_grid.h"
@@ -17,7 +17,6 @@ static const vertex_t v_fst[] = {
     { 0, -1 },
     { 0, 1 },
     { 1, -1 },
-    { 1, -1 },
     { 1, 0 },
     { 1, 1 }
 };
@@ -26,14 +25,14 @@ int wg_word_build(char* grid, const word_list_t* wl)
 {
     int ret = 0;
     int ii = 0;
-    graph_t g;
+    graph_t gg;
 
     /* Sanity checks & everything to lower case */
     ret = wg_sanity_checks(grid, wl);
-    RET_ON_ERR(ret);
+    ReturnOnError(ret);
 
-    ret = wg_str_to_grid(grid, &g);
-    RET_ON_ERR(ret);
+    ret = wg_str_to_grid(grid, &gg);
+    ReturnOnError(ret);
 
     /* Algorithm:
      * Build all possible valid words after removing redundant entries from
@@ -43,16 +42,16 @@ int wg_word_build(char* grid, const word_list_t* wl)
 
     /* Start with first word */
     for (ii = 0; ii < wl->n_words; ii++) {
-        ret = wg_check_word(wl->words[ii], &g);
+        ret = wg_check_word(wl->words[ii], &gg);
         if (ret == SUCCESS) {
-            printf("%s\n", wl->words[ii]);
+            printf("Found word: %s\n", wl->words[ii]);
         }
     }
 
     return (SUCCESS);
 }
 
-int wg_check_word(char* word, graph_t* g)
+int wg_check_word(char* word, graph_t* gg)
 {
     int ii = 0;
     int xx = 0;
@@ -62,21 +61,21 @@ int wg_check_word(char* word, graph_t* g)
     int ret = SUCCESS;
 
     t_g = malloc(sizeof(graph_t));
-    memcpy((void*) t_g, (void*) g, sizeof(graph_t));
+    memcpy((void*) t_g, (void*) gg, sizeof(graph_t));
 
     int w_len = strlen(word);
 
-    DBG_PRINTF("Word: %s\n", word);
+    LOG_Debug("Word: %s", word);
 
     ret = wg_find_char(t_g, ch, &xx, &yy);
-    RET_ON_ERR(ret);
+    RetOnErrorWithLog(ret, "Word not found");
 
-    DBG_PRINTF("Found first char %c at xx: %d, yy: %d.\n",
+    LOG_Debug("Found first char %c at xx: %d, yy: %d.",
                ch, xx, yy);
 
     for (ii = 1; ii < w_len; ii++) {
         ret = wg_find_next_char(t_g, word[ii], &xx, &yy);
-        RET_ON_ERR(ret);
+        RetOnErrorWithLog(ret, "Word not found");
     }
 
     return (SUCCESS);
@@ -138,12 +137,12 @@ int wg_sanity_checks(char* grid, const word_list_t* wl)
 
     /* Preliminary checks */
     if (grid == NULL) {
-        EPRINTF("Invalid inputs to word_traverse\n");
+        LOG_Error("Invalid inputs to word_traverse");
         return (E_ARGS);
     }
 
     if (strlen(grid) != GRID_TOT_LEN) {
-        EPRINTF("Input must be %d characters to form a %dx%d grid.\n",
+        LOG_Error("Input must be %d characters to form a %dx%d grid.",
                 GRID_TOT_LEN, GRID_SIDE_LEN, GRID_SIDE_LEN);
         return (E_ARGS);
     }
