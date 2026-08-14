@@ -13,5 +13,5 @@ foreach (PROJ_NAME IN ITEMS word_grid_c)
 endforeach()
 
 target_include_directories(word_grid_c PRIVATE C/src/include)
-target_link_libraries(word_grid_c PRIVATE c_queue_impl wl_impl)
+target_link_libraries(word_grid_c PRIVATE wl_impl c_queue_impl)
 
