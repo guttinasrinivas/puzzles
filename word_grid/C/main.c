@@ -8,10 +8,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-
+#include "simple_logger.h"
 #include "generics.h"
 #include "word_list.h"
 #include "word_grid.h"
+
+
+int LOG_CurrLevel;
+
 
 static void usage(char* pname)
 {
@@ -38,14 +42,22 @@ int main(int argc, char** argv)
     wl.fname = dict_name;
     wl.filters = grid;
     ret = wl_read_list(&wl);
-    RET_MSG_ON_ERR(ret, "Dictionary file access error.\n");
+    RetOnErrorWithLog(ret, "Dictionary file access error.\n");
 
-    LOG_PRINTF(INFO, "Starting up...\n");
+    LOG_Info("Starting up...\n");
     ret = wg_word_build(grid, &wl);
-    RET_MSG_ON_ERR(ret, "Error %d finding words in given input.\n", ret);
+    RetOnErrorWithLog(ret, "Error %d finding words in given input.\n", ret);
 
-    LOG_PRINTF(INFO, "Done.\n");
+    LOG_Info("Done.\n");
 
     return (ret);
 }
 
+
+void cleanup_and_exit(int retcode)
+{
+    exit(retcode);
+}
+
+
+/* End of file */
