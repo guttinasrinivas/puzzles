@@ -2,7 +2,8 @@
 find_package(Threads REQUIRED)
 
 # Add the executable target (assumes your source code file is named main.cpp)
-add_executable(threads_test src/thread_test.cpp)
+add_executable(threads_test src/thread_test.cpp
+                            $ENV{VAS_LIB_HOME}/src/SimpleLogger.cpp)
 
 
 # Choose CLI Args Parser
@@ -19,7 +20,7 @@ target_link_directories(threads_test PUBLIC $ENV{VAS_LIB_HOME}/build)
 
 
 # Link the threads library to the target
-target_link_libraries(threads_test PRIVATE simple_logger Threads::Threads)
+target_link_libraries(threads_test PRIVATE Threads::Threads)
 if(NOT APPLE)
 target_link_options(threads_test PRIVATE -static)
 endif()

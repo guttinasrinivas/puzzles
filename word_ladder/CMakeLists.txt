@@ -4,7 +4,8 @@ add_executable(word_ladder_c
 
 add_executable(word_ladder_cpp 
     CPP/src/main.cpp
-    $ENV{VAS_LIB_HOME}/src/utils.cpp)
+    $ENV{VAS_LIB_HOME}/src/utils.cpp
+    $ENV{VAS_LIB_HOME}/src/SimpleLogger.cpp)
 
 
 foreach (PROJ_NAME IN ITEMS word_ladder_c word_ladder_cpp)
@@ -20,5 +21,5 @@ target_include_directories(word_ladder_c PRIVATE C)
 target_link_libraries(word_ladder_c PRIVATE c_queue_impl wl_impl)
 
 target_include_directories(word_ladder_cpp PRIVATE CPP/inc word_ladder_cpp/CPP)
-target_link_libraries(word_ladder_cpp PRIVATE wl_impl simple_logger)
+target_link_libraries(word_ladder_cpp PRIVATE wl_impl)
 

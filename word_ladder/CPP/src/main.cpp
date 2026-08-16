@@ -173,7 +173,6 @@ int main(int ac, char* av[])
             exit(0);
         }
 
-        LOG_Info("TODO: Implement word_ladder in CPP");
         LOG_Debug("Using dictionary file %s", dict_fname->c_str());
         auto wl = std::make_shared<WordLadder>(dict_fname, logger);
         wl->loadWords();
