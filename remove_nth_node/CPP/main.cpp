@@ -89,6 +89,11 @@ class Solution {
             auto it = ListNodeIterator::alloc(head);
             auto tgt = ListNodeIterator::alloc(head);
 
+            if (head == NULL) {
+                LOG_Error("No head!!! Cannot handle headless horsemen.");
+                return NULL;
+            }
+
             /* TODO Check if nn == 0 */
 
             while (it->next() != it->npos) {
