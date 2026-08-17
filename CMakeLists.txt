@@ -33,4 +33,5 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 add_subdirectory(word_ladder)
 add_subdirectory(word_grid)
 add_subdirectory(thread_sync)
+add_subdirectory(remove_nth_node)
 
